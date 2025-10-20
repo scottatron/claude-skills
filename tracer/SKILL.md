@@ -25,6 +25,27 @@ tr --version  # Both commands work identically
 
 Prerequisites: [Rust toolchain](https://rustup.rs/)
 
+## Git Configuration
+
+After initializing Tracer, configure git to track the JSONL file while ignoring the database:
+
+```bash
+# Add the database to .gitignore (only needs to be done once)
+echo ".trace/bd.db" >> .gitignore
+
+# Commit .gitignore if it's a new entry
+git add .gitignore
+git commit -m "Ignore Tracer database file"
+
+# Always commit the JSONL file to share issues across sessions/agents
+git add .trace/issues.jsonl
+git commit -m "Update Tracer issues"
+```
+
+**Why this matters:**
+- `.trace/issues.jsonl` - Human-readable, git-friendly, should be committed and shared
+- `.trace/bd.db` - Binary database file, should NOT be committed (regenerated from JSONL)
+
 ## Quick Start
 
 ### Initialize a project
@@ -213,6 +234,11 @@ tracer export -o session-backup.jsonl
 
 ### 3. Multi-Agent Collaboration
 ```bash
+# First time setup (any agent, only once)
+echo ".trace/bd.db" >> .gitignore
+git add .gitignore
+git commit -m "Ignore Tracer database"
+
 # Agent 1: Creates and claims work
 tracer create "Implement feature X" -t task
 tracer update test-10 --status in_progress
@@ -221,7 +247,7 @@ git commit -m "Agent 1: Start feature X"
 git push
 
 # Agent 2: Pulls and finds available work
-git pull  # Tracer auto-imports changes
+git pull  # Tracer auto-imports changes from JSONL
 tracer ready  # test-10 won't show (in progress)
 tracer create "Implement feature Y" -t task
 tracer update test-11 --status in_progress
@@ -263,8 +289,9 @@ tracer close <id> --reason "Completed"  # When done
 ```
 
 ### 5. Commit Often
-Tracer stores everything in `.trace/issues.jsonl`:
+Tracer stores everything in `.trace/issues.jsonl` (commit this, NOT the `.trace/bd.db` file):
 ```bash
+# Make sure .trace/bd.db is in .gitignore first (see Git Configuration section)
 git add .trace/issues.jsonl
 git commit -m "Update task status"
 ```
