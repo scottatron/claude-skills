@@ -24,8 +24,8 @@ REPO=$(echo "$REPO_INFO" | jq -r .name)
 
 # Get thread details to find the pull request review ID
 THREAD_DATA=$(gh api graphql -f query="
-  query {
-    node(id: \"$THREAD_ID\") {
+  query(\$threadId: ID!) {
+    node(id: \$threadId) {
       ... on PullRequestReviewThread {
         id
         comments(first: 1) {
@@ -41,7 +41,7 @@ THREAD_DATA=$(gh api graphql -f query="
       }
     }
   }
-")
+" -F threadId="$THREAD_ID")
 
 # Extract the first comment's database ID for replying via REST API
 FIRST_COMMENT_DB_ID=$(echo "$THREAD_DATA" | jq -r '.data.node.comments.nodes[0].databaseId')

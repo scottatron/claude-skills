@@ -52,7 +52,7 @@ RESULT=$(gh api graphql -f query="
 
 # Extract stats
 TOTAL_THREADS=$(echo "$RESULT" | jq -r '.data.repository.pullRequest.reviewThreads.totalCount')
-UNRESOLVED_THREADS=$(echo "$RESULT" | jq '[.data.repository.pullRequest.reviewThreads.nodes[] | select(.isResolved == false)] | length')
+UNRESOLVED_THREADS=$(echo "$RESULT" | jq -r '[.data.repository.pullRequest.reviewThreads.nodes[] | select(.isResolved == false)] | length')
 
 echo "PR #$PR_NUMBER Review Thread Status"
 echo "====================================="
