@@ -22,13 +22,17 @@ OWNER=$(echo "$REPO_INFO" | jq -r .owner.login)
 REPO=$(echo "$REPO_INFO" | jq -r .name)
 
 # Fetch all review threads
-RESULT=$(gh api graphql -f query="
-  query(\$owner: String!, \$repo: String!, \$pr: Int!) {
+RESULT=$(gh api graphql --paginate -f query="
+  query(\$owner: String!, \$repo: String!, \$pr: Int!, \$endCursor: String) {
     repository(owner: \$owner, name: \$repo) {
       pullRequest(number: \$pr) {
         number
         title
-        reviewThreads(first: 100) {
+        reviewThreads(first: 100, after: \$endCursor) {
+          pageInfo {
+            hasNextPage
+            endCursor
+          }
           totalCount
           nodes {
             id
@@ -50,9 +54,12 @@ RESULT=$(gh api graphql -f query="
   }
 " -F owner="$OWNER" -F repo="$REPO" -F pr="$PR_NUMBER")
 
+# Combine results from all pages
+ALL_NODES=$(echo "$RESULT" | jq -s 'map(.data.repository.pullRequest.reviewThreads.nodes) | add')
+
 # Extract stats
-TOTAL_THREADS=$(echo "$RESULT" | jq -r '.data.repository.pullRequest.reviewThreads.totalCount')
-UNRESOLVED_THREADS=$(echo "$RESULT" | jq -r '[.data.repository.pullRequest.reviewThreads.nodes[] | select(.isResolved == false)] | length')
+TOTAL_THREADS=$(echo "$ALL_NODES" | jq 'length')
+UNRESOLVED_THREADS=$(echo "$ALL_NODES" | jq '[.[] | select(.isResolved == false)] | length')
 
 echo "PR #$PR_NUMBER Review Thread Status"
 echo "====================================="
@@ -66,6 +73,6 @@ if [ "$UNRESOLVED_THREADS" -eq 0 ]; then
 else
   echo "✗ Unresolved threads found:"
   echo ""
-  echo "$RESULT" | jq -r '.data.repository.pullRequest.reviewThreads.nodes[] | select(.isResolved == false) | "  • \(.path // "General comment"):\(.line // "N/A") - \(.comments.nodes[0].body[0:80])..."'
+  echo "$ALL_NODES" | jq -r '.[] | select(.isResolved == false) | "  • \(.path // "General comment"):\(.line // "N/A") - \(.comments.nodes[0].body[0:80])..."'
   exit 1
 fi

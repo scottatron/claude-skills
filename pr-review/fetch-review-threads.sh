@@ -24,14 +24,18 @@ REPO_INFO=$(gh repo view --json owner,name)
 OWNER=$(echo "$REPO_INFO" | jq -r .owner.login)
 REPO=$(echo "$REPO_INFO" | jq -r .name)
 
-# Fetch all review threads using GraphQL
-RESULT=$(gh api graphql -f query="
-  query(\$owner: String!, \$repo: String!, \$pr: Int!) {
+# Fetch all review threads using GraphQL (paginated)
+RESULT=$(gh api graphql --paginate -f query="
+  query(\$owner: String!, \$repo: String!, \$pr: Int!, \$endCursor: String) {
     repository(owner: \$owner, name: \$repo) {
       pullRequest(number: \$pr) {
         number
         title
-        reviewThreads(first: 100) {
+        reviewThreads(first: 100, after: \$endCursor) {
+          pageInfo {
+            hasNextPage
+            endCursor
+          }
           nodes {
             id
             isResolved
@@ -59,10 +63,13 @@ RESULT=$(gh api graphql -f query="
   }
 " -F owner="$OWNER" -F repo="$REPO" -F pr="$PR_NUMBER")
 
+# Combine results from all pages
+ALL_THREADS=$(echo "$RESULT" | jq -s 'map(.data.repository.pullRequest.reviewThreads.nodes) | add')
+
 # Filter and format the results
 if [ "$INCLUDE_RESOLVED" = "--all" ]; then
-  echo "$RESULT" | jq '.data.repository.pullRequest.reviewThreads.nodes'
+  echo "$ALL_THREADS"
 else
   # Only show unresolved threads
-  echo "$RESULT" | jq '.data.repository.pullRequest.reviewThreads.nodes | map(select(.isResolved == false))'
+  echo "$ALL_THREADS" | jq 'map(select(.isResolved == false))'
 fi
