@@ -19,7 +19,7 @@ If the CLI command is missing or incomplete, validate Obsidian settings and shel
 - Quote values that contain spaces.
 - Place `vault="<vault-name>"` first when targeting a non-default vault.
 - Prefer `path="Folder/Note.md"` over `file=Note` when ambiguity is possible.
-- Use `--copy` only when clipboard output is explicitly useful.
+
 
 ## Read-only command recipes
 
@@ -28,7 +28,7 @@ obsidian daily
 obsidian search query="meeting notes"
 obsidian read path="Inbox/TODO.md"
 obsidian tasks daily
-obsidian tags counts
+obsidian tags [counts]
 obsidian diff path="Notes/Architecture.md" from=1 to=3
 ```
 
@@ -48,7 +48,6 @@ Prefer append-oriented updates for incremental edits. Avoid destructive rewrites
 
 ```bash
 obsidian plugin:reload id="my-plugin"
-obsidian dev:open
 obsidian dev:screenshot path="/tmp/obsidian.png"
 ```
 

@@ -11,7 +11,7 @@ Use one-shot commands instead of the interactive TUI unless the user explicitly 
 
 1. Confirm command availability with `command -v obsidian`.
 2. Inspect available commands with `obsidian help`.
-3. When syntax is uncertain, run `obsidian <command> help` before writing content.
+3. When syntax is uncertain, re-run `obsidian help` and review the command list before writing content.
 
 ## Follow a safe execution flow
 
