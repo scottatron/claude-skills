@@ -1,0 +1,4 @@
+interface:
+  display_name: "Obsidian CLI"
+  short_description: "Automate note and vault workflows with Obsidian CLI"
+  default_prompt: "Use $obsidian to run safe Obsidian CLI workflows for notes, search, and metadata."
